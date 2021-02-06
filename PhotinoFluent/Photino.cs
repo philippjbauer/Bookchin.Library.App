@@ -76,7 +76,9 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Restore()
         {
-            return this.Resize(_lastSize);
+            return _lastSize != null
+                ? this.Resize(_lastSize)
+                : this;
         }
 
         public Photino Move(Point location)
