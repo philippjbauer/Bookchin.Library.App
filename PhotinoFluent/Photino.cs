@@ -34,16 +34,12 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Hide()
         {
-            Console.WriteLine("Hide is not implemented on Photino Window yet.");
-
-            return this;
+            throw new NotImplementedException("Hide is not yet implemented in PhotinoNET.");
         }
 
         public Photino Close()
         {
-            Console.WriteLine("Close is not implemented on Photino Window yet.");
-
-            return this;
+            throw new NotImplementedException("Close is not yet implemented in PhotinoNET.");
         }
 
         public Photino Resize(Size size)
@@ -60,9 +56,7 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Minimize()
         {
-            Console.WriteLine("Minimize is not implemented on Photino Window yet.");
-
-            return this;
+            throw new NotImplementedException("Minimize is not yet implemented in PhotinoNET.");
         }
 
         public Photino Maximize()
@@ -72,9 +66,7 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Fullscreen()
         {
-            Console.WriteLine("Close is not implemented on Photino Window yet.");
-
-            return this;
+            throw new NotImplementedException("Fullscreen is not yet implemented in PhotinoNET.");
         }
 
         public Photino Move(Point location)
