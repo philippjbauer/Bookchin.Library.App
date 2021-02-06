@@ -11,6 +11,7 @@ namespace Bookchin.Library.App
     {
         private static string _apiBaseUri = "http://localhost:7645";
         private static string _apiSchema = "api://";
+        private static string _assetSchema = "asset://";
 
         private static List<Photino> _instances = new List<Photino>();
 
@@ -87,52 +88,81 @@ namespace Bookchin.Library.App
 
             PhotinoWebAction action = JsonSerializer.Deserialize<PhotinoWebAction>(message);
 
+            Console.WriteLine($"Handling action: {action.Type}, {action.Command}");
+
             switch (action.Type)
             {
                 case "window":
-                    HandleWindowAction(action.Command, action.Parameters);
+                    HandleWindowAction(photino, action.Command, action.Parameters);
                     break;
+
                 default:
-                    photino.ShowMessage("Error", $"Error: Action {action.Type} unknown.");
+                    photino.ShowMessage("Error", $"Action {action.Type} unknown.");
                     break;
             }
         }
 
-        public static void HandleWindowAction(string command, Dictionary<string, string> parameters)
+        public static void HandleWindowAction(Photino sender, string command, Dictionary<string, string> parameters)
         {
-            var photino = CreatePhotino(parameters.GetValueOrDefault("Title") ?? "New Window");
-
-            string uriString = parameters.GetValueOrDefault("Url");
-            if (uriString != null)
+            switch (command)
             {
-                Uri uri;
-                if (uriString.Contains("http://") || uriString.Contains("https://"))
-                {
-                    uri = new Uri(uriString);
-                }
-                else if (uriString.Contains(_apiSchema))
-                {
-                    uri = new Uri($"{_apiBaseUri}/{uriString.Replace(_apiSchema, "")}");
-                }
-                else
-                {
-                    uri = new Uri(uriString, UriKind.Relative);
-                }
+                case "create":
+                    var photino = CreatePhotino(parameters.GetValueOrDefault("Title") ?? "New Window");
+                    HandleWindowActionNavigation(photino, parameters.GetValueOrDefault("Url"));
+                    photino.Window.WaitForExit();
+                    break;
+                
+                case "open":
+                    // Bug:
+                    // Navigating to a new resource does not
+                    // work and crashes the application.
+                    sender.Window.Title = parameters.GetValueOrDefault("Title") ?? sender.Window.Title;
+                    HandleWindowActionNavigation(sender, parameters.GetValueOrDefault("Url"));
+                    break;
 
+                case "maximize":
+                    sender.Maximize();
+                    break;
+
+                case "restore":
+                    sender.Restore();
+                    break;
+
+                default:
+                    sender.ShowMessage("Error", $"Window command {command} unknown.");
+                    break;
+            }
+        }
+
+        private static void HandleWindowActionNavigation(Photino photino, string path)
+        {
+            if (path == null)
+            {
+                photino.ShowMessage("Error", "No valid path to navigate to.");
+                return;
+            }
+
+            if (path.Contains("http://") || path.Contains("https://"))
+            {
+                Uri uri = new Uri(path);
                 photino.NavigateTo(uri);
-                photino.Window.WaitForExit();
-
-                return;
             }
-
-            string file = parameters.GetValueOrDefault("file");
-            if (file != null)
+            else if (path.Contains(_apiSchema))
             {
-                photino.NavigateTo(file);
-                photino.Window.WaitForExit();
-
-                return;
+                Uri uri = new Uri($"{_apiBaseUri}/{path.Replace(_apiSchema, "")}");
+                photino.NavigateTo(uri);
             }
+            else if (path.Contains(_assetSchema))
+            {
+                photino.NavigateTo(path.Replace(_assetSchema, "wwwroot/"));
+            }
+            else
+            {
+                Uri uri = new Uri(path, UriKind.Relative);
+                photino.NavigateTo(uri);
+            }
+
+            return;
         }
     }
 }

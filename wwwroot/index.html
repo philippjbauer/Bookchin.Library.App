@@ -1,12 +1,48 @@
 <!DOCTYPE html>
 <html>
-    <head></head>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="assets/css/main.css">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;500;700&display=swap"> 
+    </head>
     <body>
-        <button onclick="openSwagger()">Open Swagger</button>
-        <button onclick="openDuck()">Open DuckDuckGo</button>
+        <div id="app">
+            <section>
+                <div class="photino-logo center">
+                    <span class="photino"></span> Photino
+                </div>
+            </section>
+            <section class="bg-blue">
+                <h3 class="center">These operations work.</h3>
+                
+                <div class="center">
+                    <h4>Create windows</h4>
+                    <button onclick="createSwagger()">Create Swagger UI window</button>
+                    <button onclick="createDuckDuckGo()">Create DuckDuckGo window</button>
+                    <button onclick="createLocal()">Create local file window</button>
+                </div>
+
+                <div class="center" style="margin: 2em auto 1em">
+                    <h4>Manipulate current window</h4>
+                    <button onclick="maximizeWindow()">Maximize window</button>
+                    <button onclick="restoreWindow()">Restore window</button>
+                </div>
+            </section>
+            <section class="bg-grey">
+                <h3 class="center">These operations currently crash the app.</h3>
+
+                <div class="center">
+                    <h4>Navigate in current window</h4>
+                    <button onclick="openSwagger()">Open Swagger UI in current window</button>
+                    <button onclick="openLocal()">Open local file in current window</button>
+                </div>
+            </section>
+        </div>
 
         <script>
-            function openSwagger() {
+            function createSwagger() {
                 window.external.sendMessage(JSON.stringify({
                     Type: 'window',
                     Command: 'create',
@@ -17,7 +53,7 @@
                 }));
             }
             
-            function openDuck() {
+            function createDuckDuckGo() {
                 window.external.sendMessage(JSON.stringify({
                     Type: 'window',
                     Command: 'create',
@@ -25,6 +61,53 @@
                         Title: 'DuckDuckGo',
                         Url: 'https://duckduckgo.com'
                     }
+                }));
+            }
+            
+            function createLocal() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'create',
+                    Parameters: {
+                        Title: 'Turtles all the way down',
+                        Url: 'asset://index.html'
+                    }
+                }));
+            }
+
+            function openSwagger() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'open',
+                    Parameters: {
+                        Title: 'Swagger UI',
+                        Url: 'api://swagger/index.html'
+                    }
+                }));
+            }
+            
+            function openLocal() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'open',
+                    Parameters: {
+                        Title: 'Turtles all the way down',
+                        Url: 'asset://index.html'
+                    }
+                }));
+            }
+            
+            function maximizeWindow() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'maximize'
+                }));
+            }
+
+            function restoreWindow() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'restore'
                 }));
             }
         </script>
