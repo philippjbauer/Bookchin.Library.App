@@ -8,6 +8,7 @@ namespace Bookchin.Library.App.PhotinoFluent
     public class Photino : IPhotino
     {
         private PhotinoNET.PhotinoNET _window;
+        private Size _lastSize;
 
         public PhotinoNET.PhotinoNET Window => _window;
 
@@ -46,6 +47,8 @@ namespace Bookchin.Library.App.PhotinoFluent
         {
             this.Window.Size = size;
 
+            _lastSize = this.Window.Size;
+
             return this;
         }
 
@@ -69,6 +72,11 @@ namespace Bookchin.Library.App.PhotinoFluent
         public Photino Fullscreen()
         {
             throw new NotImplementedException("Fullscreen is not yet implemented in PhotinoNET.");
+        }
+
+        public Photino Restore()
+        {
+            return this.Resize(_lastSize);
         }
 
         public Photino Move(Point location)
