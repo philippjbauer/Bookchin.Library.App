@@ -79,7 +79,7 @@ namespace Bookchin.Library.App.PhotinoFluent
             // very bottom of the screen and the only visible thing is the
             // application window title bar. As a workaround we make a 
             // negative value out of the vertical position to "pull" the window up.
-            location.Y = location.Y > 0
+            location.Y = location.Y >= 0
                 ? location.Y - this.WorkArea.Height
                 : location.Y;
 
