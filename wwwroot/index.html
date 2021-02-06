@@ -1,1 +1,32 @@
-Add content here.
+<!DOCTYPE html>
+<html>
+    <head></head>
+    <body>
+        <button onclick="openSwagger()">Open Swagger</button>
+        <button onclick="openDuck()">Open DuckDuckGo</button>
+
+        <script>
+            function openSwagger() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'create',
+                    Parameters: {
+                        Title: 'Swagger UI',
+                        Url: 'api://swagger/index.html'
+                    }
+                }));
+            }
+            
+            function openDuck() {
+                window.external.sendMessage(JSON.stringify({
+                    Type: 'window',
+                    Command: 'create',
+                    Parameters: {
+                        Title: 'DuckDuckGo',
+                        Url: 'https://duckduckgo.com'
+                    }
+                }));
+            }
+        </script>
+    </body>
+</html>
