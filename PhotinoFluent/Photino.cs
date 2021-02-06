@@ -8,8 +8,8 @@ namespace Bookchin.Library.App.PhotinoFluent
     public class Photino : IPhotino
     {
         private PhotinoNET.PhotinoNET _window;
-        private (int width, int height) _lastSize = (0, 0);
-        private (int left, int top) _lastLocation = (0, 0);
+        private Size _lastSize;
+        private Point _lastLocation;
 
         public PhotinoNET.PhotinoNET Window => _window;
 
@@ -25,6 +25,8 @@ namespace Bookchin.Library.App.PhotinoFluent
         public Photino(PhotinoNET.PhotinoNET window)
         {
             _window = window;
+            _lastSize = window.Size;
+            _lastLocation = window.Location;
         }
 
         public Photino Show()
@@ -46,7 +48,8 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Resize(Size size)
         {
-            _lastSize = (this.Window.Width, this.Window.Height);
+            // Save last size
+            _lastSize = this.Window.Size;
 
             this.Window.Size = size;
 
@@ -77,7 +80,7 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Restore()
         {
-            bool isRestorable = _lastSize.width != 0 && _lastSize.height != 0;
+            bool isRestorable = _lastSize.IsEmpty;
 
             if (isRestorable == false)
             {
@@ -85,14 +88,14 @@ namespace Bookchin.Library.App.PhotinoFluent
             }
 
             return this
-                .Move(_lastLocation.left, _lastLocation.top)
-                .Resize(_lastSize.width, _lastSize.height);
+                .Move(_lastLocation.X, _lastLocation.Y)
+                .Resize(_lastSize.Width, _lastSize.Height);
         }
 
         public Photino Move(Point location)
         {
             // Save last location
-            _lastLocation = (this.Window.Location.X, this.Window.Location.Y);
+            _lastLocation = this.Window.Location;
 
             // Bug:
             // For some reason the vertical position is not handled correctly.
