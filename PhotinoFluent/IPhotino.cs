@@ -20,6 +20,7 @@ namespace Bookchin.Library.App.PhotinoFluent
         Photino Resize(int width, int height);
         Photino Minimize();
         Photino Maximize();
+        Photino Fullscreen();
 
         Photino Move(Point location);
         Photino Move(int left, int top);
