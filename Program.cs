@@ -61,7 +61,7 @@ namespace Bookchin.Library.App
                     .Move(rect.Value.Location);
             }
 
-            // Check if another Window sits at the configured position,
+            // Check if another window sits at the configured position,
             // nudge the window a bit if it would block underlying windows.
             if (_instances.Count > 0)
             {
@@ -73,11 +73,10 @@ namespace Bookchin.Library.App
                 }
             }
 
+            _instances.Add(photino);
+
             Console.WriteLine($"Creating window with dimensions: ({photino.Window.Size}) at ({photino.Window.Location})");
             photino.Show();
-
-            // This seems to have no effect?
-            _instances.Add(photino);
 
             return photino;
         }
