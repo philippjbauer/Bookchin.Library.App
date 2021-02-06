@@ -51,7 +51,9 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Resize(int width, int height)
         {
-            return this.Resize(new Size(width, height));
+            return this
+                .Move(0, 0)
+                .Resize(new Size(width, height));
         }
 
         public Photino Minimize()
