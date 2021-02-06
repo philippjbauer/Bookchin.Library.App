@@ -69,7 +69,7 @@ namespace Bookchin.Library.App
                 
                 if (isOverlapping)
                 {
-                    photino.Offset(20, 20);
+                    photino.Offset(20 * _instances.Count, 20 * _instances.Count);
                 }
             }
 
