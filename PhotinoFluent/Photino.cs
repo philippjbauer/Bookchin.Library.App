@@ -8,7 +8,7 @@ namespace Bookchin.Library.App.PhotinoFluent
     public class Photino : IPhotino
     {
         private PhotinoNET.PhotinoNET _window;
-        private Size _lastSize;
+        private (int width, int height) _lastSize = (0, 0);
 
         public PhotinoNET.PhotinoNET Window => _window;
 
@@ -47,7 +47,7 @@ namespace Bookchin.Library.App.PhotinoFluent
         {
             this.Window.Size = size;
 
-            _lastSize = this.Window.Size;
+            _lastSize = (size.Width, size.Height);
 
             return this;
         }
@@ -76,9 +76,14 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Restore()
         {
-            return _lastSize != null
-                ? this.Resize(_lastSize)
-                : this;
+            bool isRestorable = _lastSize.width != 0 && _lastSize.height != 0;
+
+            if (isRestorable == false)
+            {
+                return this;
+            }
+
+            return this.Resize(_lastSize.width, _lastSize.height);
         }
 
         public Photino Move(Point location)
