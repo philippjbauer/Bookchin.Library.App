@@ -51,9 +51,7 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Resize(int width, int height)
         {
-            return this
-                .Move(0, 0)
-                .Resize(new Size(width, height));
+            return this.Resize(new Size(width, height));
         }
 
         public Photino Minimize()
@@ -63,7 +61,9 @@ namespace Bookchin.Library.App.PhotinoFluent
 
         public Photino Maximize()
         {
-            return this.Resize(this.WorkArea.Width, this.WorkArea.Height);
+            return this
+                .Move(0, 0)
+                .Resize(this.WorkArea.Width, this.WorkArea.Height);
         }
 
         public Photino Fullscreen()
