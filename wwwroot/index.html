@@ -51,73 +51,56 @@
         </div>
 
         <script>
-            function createSwagger() {
+            function sendCommand(type, command, parameters = null)
+            {
                 window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'create',
-                    Parameters: {
-                        Title: 'Swagger UI',
-                        Url: 'api://swagger/index.html'
-                    }
-                }));
+                    Type: type,
+                    Command: command,
+                    Parameters: parameters
+                }))
+            }
+
+            function createSwagger() {
+                sendCommand('window', 'create', {
+                    Title: 'Swagger UI',
+                    Url: 'api://swagger/index.html'
+                });
             }
             
             function createDuckDuckGo() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'create',
-                    Parameters: {
-                        Title: 'DuckDuckGo',
-                        Url: 'https://duckduckgo.com'
-                    }
-                }));
+                sendCommand('window', 'create', {
+                    Title: 'DuckDuckGo',
+                    Url: 'https://duckduckgo.com'
+                });
             }
             
             function createLocal() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'create',
-                    Parameters: {
-                        Title: 'Turtles all the way down',
-                        Url: 'asset://index.html'
-                    }
-                }));
+                sendCommand('window', 'create', {
+                    Title: 'Turtles all the way down',
+                    Url: 'asset://index.html'
+                });
             }
 
             function openSwagger() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'open',
-                    Parameters: {
-                        Title: 'Swagger UI',
-                        Url: 'api://swagger/index.html'
-                    }
-                }));
+                sendCommand('window', 'open', {
+                    Title: 'Swagger UI',
+                    Url: 'api://swagger/index.html'
+                });
             }
             
             function openLocal() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'open',
-                    Parameters: {
-                        Title: 'Turtles all the way down',
-                        Url: 'asset://index.html'
-                    }
-                }));
+                sendCommand('window', 'open', {
+                    Title: 'Turtles all the way down',
+                    Url: 'asset://index.html'
+                });
             }
             
             function maximizeWindow() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'maximize'
-                }));
+                sendCommand('window', 'maximize');
             }
-
+            
             function restoreWindow() {
-                window.external.sendMessage(JSON.stringify({
-                    Type: 'window',
-                    Command: 'restore'
-                }));
+                sendCommand('window', 'restore');
             }
         </script>
     </body>
