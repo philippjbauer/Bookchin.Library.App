@@ -6,11 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Photino.NET" Version="1.0.6" />
+    <!-- <PackageReference Include="Photino.NET" Version="1.0.6" /> -->
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Bookchin.Library.API\Bookchin.Library.API.csproj" />
+    <ProjectReference Include="..\..\..\Software\Photino\photino.NET\Photino.NET\Photino.NET.csproj" />
   </ItemGroup>
 
 </Project>

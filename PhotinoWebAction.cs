@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Bookchin.Library.App.PhotinoFluent
+namespace Bookchin.Library.App
 {
     public class PhotinoWebAction
     {

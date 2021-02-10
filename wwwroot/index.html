@@ -32,6 +32,14 @@
                 <div class="center" style="margin: 2em auto 1em">
                     <h4>Manipulate current window</h4>
                     <button onclick="maximizeWindow()">Maximize window</button>
+                    <button onclick="restoreWindow()">Restore window</button>
+                    <button onclick="closeWindow()">Close window</button>
+                </div>
+                
+                <div class="center" style="margin: 2em auto 1em">
+                    <h4>Send messages to windows</h4>
+                    <button onclick="sendMessageToAll()">Send message to all open windows</button>
+                    <button onclick="sendMessageToSome()">Send message to some open windows</button>
                 </div>
             </section>
             <section class="bg-grey">
@@ -41,11 +49,6 @@
                     <h4>Navigate in current window</h4>
                     <button onclick="openSwagger()">Open Swagger UI in current window</button>
                     <button onclick="openLocal()">Open local file in current window</button>
-                </div>
-
-                <div class="center" style="margin: 2em auto 1em">
-                    <h4>Manipulate current window</h4>
-                    <button onclick="restoreWindow()">Restore window</button>
                 </div>
             </section>
         </div>
@@ -60,48 +63,89 @@
                 }))
             }
 
-            function createSwagger() {
+            function createSwagger()
+            {
                 sendCommand('window', 'create', {
                     Title: 'Swagger UI',
                     Url: 'api://swagger/index.html'
                 });
             }
             
-            function createDuckDuckGo() {
+            function createDuckDuckGo()
+            {
                 sendCommand('window', 'create', {
                     Title: 'DuckDuckGo',
                     Url: 'https://duckduckgo.com'
                 });
             }
             
-            function createLocal() {
+            function createLocal()
+            {
                 sendCommand('window', 'create', {
                     Title: 'Turtles all the way down',
                     Url: 'asset://second.html'
                 });
             }
 
-            function openSwagger() {
+            function openSwagger()
+            {
                 sendCommand('window', 'open', {
                     Title: 'Swagger UI',
                     Url: 'api://swagger/index.html'
                 });
             }
             
-            function openLocal() {
+            function openLocal()
+            {
                 sendCommand('window', 'open', {
                     Title: 'Turtles all the way down',
                     Url: 'asset://second.html'
                 });
             }
             
-            function maximizeWindow() {
+            function maximizeWindow()
+            {
                 sendCommand('window', 'maximize');
             }
             
-            function restoreWindow() {
+            function restoreWindow()
+            {
                 sendCommand('window', 'restore');
             }
+
+            function closeWindow()
+            {
+                sendCommand('window', 'close');
+            }
+
+            function sendMessageToAll()
+            {
+                sendCommand('message', 'send', {
+                    Recipients: 'all',
+                    Message: "Message to all windows."
+                });
+            }
+
+            function sendMessageToSome()
+            {
+                sendCommand('message', 'send', {
+                    Recipients: [
+                        '11122233-4455-6677-8888-998877665544',
+                        '83749024-2637-7263-1234-888777888777'
+                    ],
+                    Message: "Message to some windows."
+                });
+            }
+
+            function getMessageWindows()
+            {
+                sendCommand('message', 'getRecipients');
+            }
+
+            // Receive messages from Photino
+            window.external.receiveMessage(message => {
+                console.log(message);
+            });
         </script>
     </body>
 </html>
