@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bookchin Library Login</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Noto+Sans+KR:wght@300;500;700&display=swap"> 
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+        body {
+            background: url("assets/images/background.jpg") no-repeat bottom center;
+            background-size: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login input {
+            background: rgba(180, 180, 180, 0.3);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+            border-radius: 1em;
+            border: none;
+            color: white;
+            padding: 0.25em 1em;
+            margin: 0 0 1em;
+        }
+            .login .header {
+                color: rgb(200, 200, 200);
+                text-align: center;
+            }
+                .login .header .h1 {
+                    color: rgb(200, 200, 200);
+                    margin: 0;
+                }
+                .login .header p {
+                    font-weight: bold;
+                }
+    </style>
+</head>
+<body>
+    <div class="login">
+        <div class="header">
+            <div class="h1">Bookchin Library</div>
+            <p>Sign in to access your account</p>
+        </div>
+        <form onsubmit="authenticate()">
+            <div>
+                <input type="text" name="username" id="username" placeholder="Username">
+            </div>
+            <div>
+                <input type="password" name="password" id="password" placeholder="Password">
+            </div>
+            <button type="submit" class="">Continue</button>
+        </form>
+    </div>
+
+    <script>
+        function sendCommand(type, command, parameters = null)
+        {
+            window.external.sendMessage(JSON.stringify({
+                Type: type,
+                Command: command,
+                Parameters: parameters
+            }))
+        }
+
+        function authenticate()
+        {
+            const username = document.querySelector("#username").value;
+            const password = document.querySelector("#password").value;
+
+            if (username === "" || password === "")
+            {
+                alert("Please enter both username and password.");
+                return;
+            }
+
+            sendCommand("user", "authenticate", {
+                Username: username,
+                Password: password
+            });
+        }
+
+        window.external.receiveMessage(message => {
+            alert(message);
+        });
+    </script>
+</body>
+</html>

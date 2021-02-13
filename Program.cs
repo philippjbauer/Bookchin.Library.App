@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text.Json;
+using System.Threading.Tasks;
 using PhotinoNET;
+using Flurl.Http;
+using Bookchin.Library.API.Controllers.ViewModels;
 
 namespace Bookchin.Library.App
 {
@@ -15,30 +18,67 @@ namespace Bookchin.Library.App
 
         private static List<PhotinoWindow> _instances = new List<PhotinoWindow>();
 
+        private static string _jwtBearer;
+
+        [STAThread]
         static void Main(string[] args)
         {
             // Configure internal WebHost for API project
             string[] apiArgs = new string[] {
                 "ENVIRONMENT=Development",
                 $"URLS={_apiBaseUri}",
-                "DefaultConnection=Data Source=../Bookchin.Library.API/Data/BookchinLibrary.db"
+                "ConnectionStrings:DefaultConnection=Data Source=../Bookchin.Library.API/Data/BookchinLibrary.db"
             };
 
-            using (var api = Bookchin.Library.API.Program.CreateHostBuilder(apiArgs).Build()) 
+            using (var api = Bookchin.Library.API.Program.CreateHostBuilder(apiArgs).Build())
             { 
                 // Start Api Host
                 api.StartAsync();
 
                 // Create and configure main window
-                PhotinoWindow mainWindow = CreatePhotinoWindow("Bookchin Library")                
+                PhotinoWindow mainWindow = CreatePhotinoWindow("Bookchin Library")
                     .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
-                    .Load("wwwroot/index.html");
+                    .Load("wwwroot/pre-login.html");
+
+                // Create login window
+                int loginWindowWidth = 400;
+                int loginWindowHeight = 500;
+                var loginWindowRect = new Rectangle(
+                    (mainWindow.MainMonitor.WorkArea.Width / 2) - (loginWindowWidth / 2),
+                    (mainWindow.MainMonitor.WorkArea.Height / 2) - (loginWindowHeight / 2),
+                    loginWindowWidth,
+                    loginWindowHeight
+                );
                 
+                CreatePhotinoWindow("Please Login", loginWindowRect, mainWindow)
+                    .IsResizable(false)
+                    .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
+                    .RegisterWindowClosingHandler((window, args) => {
+                        if (_jwtBearer != null)
+                        {
+                            mainWindow.Load("wwwroot/index.html");
+                        }
+                        else
+                        {
+                            // Bug:
+                            // The event is not fired when user
+                            // clicks on the window chrome close
+                            // button and thus does not trigger
+                            // the Dispose() method of the 
+                            // PhotinoWindow instance.
+                            mainWindow.Close();
+                        }
+                    })
+                    .Load("wwwroot/login.html")
+                    .WaitforClose();
+
+                // Wait for program end
                 mainWindow.WaitforClose();
             }
         }
 
-        static public PhotinoWindow CreatePhotinoWindow(string title, Rectangle? rect = null, PhotinoWindow parent = null)
+
+        public static PhotinoWindow CreatePhotinoWindow(string title, Rectangle? rect = null, PhotinoWindow parent = null)
         {
             // Create new PhotinoWindow Window
             var photino = new PhotinoWindow(title, options => {
@@ -87,41 +127,50 @@ namespace Bookchin.Library.App
 
             _instances.Add(photino);
 
-            photino.Show();
-
             return photino;
         }
     
-        public static void HandleJsonWebAction(object sender, string message)
+        public static async void HandleJsonWebAction(object sender, string message)
         {
             PhotinoWindow photino = (PhotinoWindow)sender;
-            PhotinoWebAction action = JsonSerializer.Deserialize<PhotinoWebAction>(message);
 
-            Console.WriteLine($"Handling action: {action.Type}, {action.Command}");
-
-            switch (action.Type.ToLower())
+            try
             {
-                case "window":
-                    HandleWindowCommand(photino, action.Command, action.Parameters);
-                    break;
+                PhotinoWebAction action = JsonSerializer.Deserialize<PhotinoWebAction>(message);
 
-                case "message":
-                    HandleMessageCommand(photino, action.Command, action.Parameters);
-                    break;
+                Console.WriteLine($"Handling action: {action.Type}, {action.Command}");
 
-                default:
-                    photino.OpenAlertWindow("Error", $"Action {action.Type} unknown.");
-                    break;
+                switch (action.Type.ToLower())
+                {
+                    case "window":
+                        await HandleWindowCommand(photino, action.Command, action.Parameters);
+                        break;
+
+                    case "message":
+                        await HandleMessageCommand(photino, action.Command, action.Parameters);
+                        break;
+
+                    case "user":
+                        await HandleUserCommand(photino, action.Command, action.Parameters);
+                        break;
+
+                    default:
+                        throw new InvalidOperationException($"Action {action.Type} unknown.");
+                }
+            }
+            catch (Exception ex)
+            {
+                photino.SendWebMessage(ex.Message);
             }
         }
 
-        public static void HandleWindowCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        public static async Task HandleWindowCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
         {
             switch (command.ToLower())
             {
                 case "create":
                     var photino = CreatePhotinoWindow(parameters.GetValueOrDefault("Title") ?? "New Window", null, window);
-                    HandleWindowActionNavigation(photino, parameters.GetValueOrDefault("Url"));
+                    await HandleWindowActionNavigation(photino, parameters.GetValueOrDefault("Url"));
                     photino.WaitforClose();
                     break;
                 
@@ -130,7 +179,7 @@ namespace Bookchin.Library.App
                     // Navigating to a new resource does not
                     // work and crashes the application.
                     window.Title = parameters.GetValueOrDefault("Title") ?? window.Title;
-                    HandleWindowActionNavigation(window, parameters.GetValueOrDefault("Url"));
+                    await HandleWindowActionNavigation(window, parameters.GetValueOrDefault("Url"));
                     break;
 
                 case "maximize":
@@ -146,12 +195,11 @@ namespace Bookchin.Library.App
                     break;
 
                 default:
-                    window.OpenAlertWindow("Error", $"Window command {command} unknown.");
-                    break;
+                    throw new InvalidOperationException($"Window command {command} unknown.");
             }
         }
 
-        public static void HandleMessageCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        public static async Task HandleMessageCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
         {
             switch (command.ToLower())
             {
@@ -185,17 +233,56 @@ namespace Bookchin.Library.App
                     break;
 
                 default:
-                    window.OpenAlertWindow("Error", $"Window command {command} unknown.");
-                    break;
+                    throw new InvalidOperationException($"Window command {command} unknown.");
             }
         }
 
-        private static void HandleWindowActionNavigation(PhotinoWindow photino, string path)
+        public static async Task HandleUserCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        {
+            switch (command.ToLower())
+            {
+                case "authenticate":
+                    string username = parameters.GetValueOrDefault("Username");
+                    string password = parameters.GetValueOrDefault("Password");
+
+                    if (username == null || password == null)
+                    {
+                        throw new ArgumentNullException("Please enter both username and password.");
+                    }
+
+                    try
+                    {
+                        var jwtBearer = await $"{_apiBaseUri}/Authenticate"
+                            .PostJsonAsync(new
+                            {
+                                username = username,
+                                password = password
+                            })
+                            .ReceiveJson<JwtTokenViewModel>();
+
+                        _jwtBearer = jwtBearer.Token;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        window.SendWebMessage("Invalid user credentials.");
+                        break;
+                    }
+
+                    window.Close();
+
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"User command {command} unknown.");
+            }
+        }
+
+        private static async Task HandleWindowActionNavigation(PhotinoWindow photino, string path)
         {
             if (path == null)
             {
-                photino.OpenAlertWindow("Error", "No valid path to navigate to.");
-                return;
+                throw new ArgumentNullException("No path to navigate to.");
             }
 
             if (path.Contains("http://") || path.Contains("https://"))

@@ -14,4 +14,8 @@
     <ProjectReference Include="..\..\..\Software\Photino\photino.NET\Photino.NET\Photino.NET.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Flurl.Http" Version="3.0.1" />
+  </ItemGroup>
+
 </Project>
