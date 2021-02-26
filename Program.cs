@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using PhotinoNET;
 using Flurl.Http;
 using Bookchin.Library.API.Controllers.ViewModels;
+using System.Threading;
 
 namespace Bookchin.Library.App
 {
@@ -32,107 +33,115 @@ namespace Bookchin.Library.App
 
             using (var api = Bookchin.Library.API.Program.CreateHostBuilder(apiArgs).Build())
             { 
-                // Start Api Host
                 api.StartAsync();
-
-                // Create and configure main window
-                PhotinoWindow mainWindow = CreatePhotinoWindow("Bookchin Library")
-                    .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
-                    .Load("wwwroot/pre-login.html");
-
-                // Create login window
-                int loginWindowWidth = 400;
-                int loginWindowHeight = 500;
-                var loginWindowRect = new Rectangle(
-                    (mainWindow.MainMonitor.WorkArea.Width / 2) - (loginWindowWidth / 2),
-                    (mainWindow.MainMonitor.WorkArea.Height / 2) - (loginWindowHeight / 2),
-                    loginWindowWidth,
-                    loginWindowHeight
-                );
-                
-                CreatePhotinoWindow("Please Login", loginWindowRect, mainWindow)
-                    .IsResizable(false)
-                    .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
-                    .RegisterWindowClosingHandler((window, args) => {
-                        if (_jwtBearer != null)
-                        {
-                            mainWindow.Load("wwwroot/index.html");
-                        }
-                        else
-                        {
-                            // Bug:
-                            // The event is not fired when user
-                            // clicks on the window chrome close
-                            // button and thus does not trigger
-                            // the Dispose() method of the 
-                            // PhotinoWindow instance.
-                            mainWindow.Close();
-                        }
-                    })
-                    .Load("wwwroot/login.html")
-                    .WaitforClose();
-
-                // Wait for program end
-                mainWindow.WaitforClose();
+                OpenMainWindow();
             }
         }
 
-
-        public static PhotinoWindow CreatePhotinoWindow(string title, Rectangle? rect = null, PhotinoWindow parent = null)
+        private static void OpenMainWindow()
         {
-            // Create new PhotinoWindow Window
-            var photino = new PhotinoWindow(title, options => {
-                    options.Parent = parent;
-                    
-                    options.WindowCreatingHandler = (object sender, EventArgs args) => {
-                        var windowInCreating = (PhotinoWindow)sender;
-                        Console.WriteLine("Creating new Window");
-                    };
-                    
-                    options.WindowCreatedHandler = (object sender, EventArgs args) =>
+            Console.WriteLine("Opening Main Window.");
+
+            string windowTitle = "Bookchin Library";
+
+            Action<PhotinoWindowOptions> windowConfiguration = options =>
+            {
+                options.WindowCreatedHandler += CreateAddInstanceEventHandler();
+                options.WindowCreatedHandler += CreateCheckWindowOverlapEventHander();
+
+                options.WindowClosingHandler += CreateRemoveInstanceEventHandler();
+            };
+
+            var mainWindow = new PhotinoWindow(windowTitle, windowConfiguration)
+                .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
+                .Resize(1024, 768)
+                .Center();
+            
+            OpenLoginWindow(mainWindow);
+
+            mainWindow.WaitForClose();
+        }
+
+        private static void OpenLoginWindow(PhotinoWindow parent)
+        {
+            Console.WriteLine("Opening Login Window.");
+
+            string windowTitle = "Please Login";
+
+            Action<PhotinoWindowOptions> windowConfiguration = options =>
+            {
+                options.Parent = parent;
+
+                options.WindowCreatedHandler += CreateAddInstanceEventHandler();
+                options.WindowCreatedHandler += CreateCheckWindowOverlapEventHander();
+
+                options.WindowClosingHandler += (object sender, EventArgs args) => {
+                    var window = (PhotinoWindow)sender;
+                    PhotinoWindow parent = window.Parent;
+
+                    if (_jwtBearer != null)
                     {
-                        var windowCreated = (PhotinoWindow)sender;
-                        Console.WriteLine($"Created new window \"{windowCreated.Title}\" with Dimensions ({windowCreated.Size}) at ({windowCreated.Location})");
-                    };
-                });
+                        parent.Load("wwwroot/index.html");
+                    }
+                    else
+                    {
+                        parent.Close();
+                    }
+                };
 
-            if (rect == null)
+                options.WindowClosingHandler += CreateRemoveInstanceEventHandler();
+            };
+
+            // Create login window
+            new PhotinoWindow(windowTitle, windowConfiguration)
+                .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
+                .Resize(400, 500)
+                .Center()
+                .UserCanResize(false)
+                .Load("wwwroot/login.html")
+                .WaitForClose();
+        }
+
+        private static EventHandler CreateAddInstanceEventHandler()
+        {
+            return (object sender, EventArgs args) =>
             {
-                Size workArea = photino.MainMonitor.WorkArea.Size;
+                var window = (PhotinoWindow)sender;
+                _instances.Add(window);
+            };
+        }
 
-                int width = (int)Math.Round(workArea.Width * 0.66, 0);
-                int height = (int)Math.Round(workArea.Height * 0.66, 0);
-
-                int left = (int)Math.Round((double)((workArea.Width - width) / 2), 0);
-                int top = (int)Math.Round((double)((workArea.Height - height) / 2), 0);
-
-                rect = new Rectangle(new Point(left, top), new Size(width, height));
-            }
-
-            photino
-                .Resize(rect.Value.Size)
-                .MoveTo(rect.Value.Location);
-
-            // Check if another window sits at the configured position,
-            // nudge the window a bit if it would block underlying windows.
-            if (_instances.Count > 0)
+        private static EventHandler CreateRemoveInstanceEventHandler()
+        {
+            return (object sender, EventArgs args) =>
             {
-                bool isOverlapping = _instances.Any(i => i.Location == photino.Location);
-                
-                if (isOverlapping)
+                var window = (PhotinoWindow)sender;
+                _instances.Remove(window);
+            };
+        }
+
+        private static EventHandler CreateCheckWindowOverlapEventHander()
+        {
+            return (object sender, EventArgs args) =>
+            {
+                var window = (PhotinoWindow)sender;
+
+                if (_instances.Count > 0)
                 {
-                    photino.Offset(20 * _instances.Count, 20 * _instances.Count);
+                    int overlapsWithCount = _instances.Count(i => i.Location == window.Location);
+                    
+                    if (overlapsWithCount > 0)
+                    {
+                        int offset = 20 * overlapsWithCount;
+                        window.Offset(offset, offset);
+                    }
                 }
-            }
-
-            _instances.Add(photino);
-
-            return photino;
+            };
         }
     
-        public static async void HandleJsonWebAction(object sender, string message)
+        private static async void HandleJsonWebAction(object sender, string message)
         {
-            PhotinoWindow photino = (PhotinoWindow)sender;
+            var window = (PhotinoWindow)sender;
 
             try
             {
@@ -143,15 +152,15 @@ namespace Bookchin.Library.App
                 switch (action.Type.ToLower())
                 {
                     case "window":
-                        await HandleWindowCommand(photino, action.Command, action.Parameters);
+                        await HandleWindowCommand(window, action.Command, action.Parameters);
                         break;
 
                     case "message":
-                        await HandleMessageCommand(photino, action.Command, action.Parameters);
+                        await HandleMessageCommand(window, action.Command, action.Parameters);
                         break;
 
                     case "user":
-                        await HandleUserCommand(photino, action.Command, action.Parameters);
+                        await HandleUserCommand(window, action.Command, action.Parameters);
                         break;
 
                     default:
@@ -160,25 +169,41 @@ namespace Bookchin.Library.App
             }
             catch (Exception ex)
             {
-                photino.SendWebMessage(ex.Message);
+                Console.WriteLine(ex.Message);
+                window.SendWebMessage(ex.Message);
             }
         }
 
-        public static async Task HandleWindowCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        private static async Task HandleWindowCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
         {
             switch (command.ToLower())
             {
                 case "create":
-                    var photino = CreatePhotinoWindow(parameters.GetValueOrDefault("Title") ?? "New Window", null, window);
-                    await HandleWindowActionNavigation(photino, parameters.GetValueOrDefault("Url"));
-                    photino.WaitforClose();
+                    string childWindowTitle = parameters.GetValueOrDefault("Title") ?? "New Window";
+
+                    Action<PhotinoWindowOptions> childWindowOptions = options =>
+                    {
+                        options.Parent = window;
+
+                        options.WindowCreatedHandler += CreateAddInstanceEventHandler();
+                        options.WindowClosingHandler += CreateRemoveInstanceEventHandler();
+                    };
+
+                    var childWindow = new PhotinoWindow(childWindowTitle, childWindowOptions)
+                        .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
+                        .Resize(window.Size)
+                        .Center();
+
+                    await HandleWindowActionNavigation(childWindow, parameters.GetValueOrDefault("Url"));
+
+                    childWindow.WaitForClose();
                     break;
                 
                 case "open":
                     // Bug:
                     // Navigating to a new resource does not
                     // work and crashes the application.
-                    window.Title = parameters.GetValueOrDefault("Title") ?? window.Title;
+                    //window.Title = parameters.GetValueOrDefault("Title") ?? window.Title;
                     await HandleWindowActionNavigation(window, parameters.GetValueOrDefault("Url"));
                     break;
 
@@ -199,7 +224,7 @@ namespace Bookchin.Library.App
             }
         }
 
-        public static async Task HandleMessageCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        private static async Task HandleMessageCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
         {
             switch (command.ToLower())
             {
@@ -237,7 +262,7 @@ namespace Bookchin.Library.App
             }
         }
 
-        public static async Task HandleUserCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
+        private static async Task HandleUserCommand(PhotinoWindow window, string command, Dictionary<string, string> parameters)
         {
             switch (command.ToLower())
             {

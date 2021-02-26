@@ -89,18 +89,22 @@
 
             function openSwagger()
             {
-                sendCommand('window', 'open', {
-                    Title: 'Swagger UI',
-                    Url: 'api://swagger/index.html'
-                });
+                // sendCommand('window', 'open', {
+                //     Title: 'Swagger UI',
+                //     Url: 'api://swagger/index.html'
+                // });
+
+                window.location = 'api://swagger/index.html';
             }
             
             function openLocal()
             {
-                sendCommand('window', 'open', {
-                    Title: 'Turtles all the way down',
-                    Url: 'asset://second.html'
-                });
+                // sendCommand('window', 'open', {
+                //     Title: 'Turtles all the way down',
+                //     Url: 'asset://second.html'
+                // });
+
+                window.location = 'asset://second.html';
             }
             
             function maximizeWindow()
