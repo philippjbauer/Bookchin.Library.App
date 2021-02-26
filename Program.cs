@@ -76,9 +76,6 @@ namespace Bookchin.Library.App
                 options.WindowCreatedHandler += CreateCheckWindowOverlapEventHander();
 
                 options.WindowClosingHandler += (object sender, EventArgs args) => {
-                    var window = (PhotinoWindow)sender;
-                    PhotinoWindow parent = window.Parent;
-
                     if (_jwtBearer != null)
                     {
                         parent.Load("wwwroot/index.html");
@@ -97,7 +94,6 @@ namespace Bookchin.Library.App
                 .RegisterWebMessageReceivedHandler(HandleJsonWebAction)
                 .Resize(400, 500)
                 .Center()
-                .UserCanResize(false)
                 .Load("wwwroot/login.html")
                 .WaitForClose();
         }
