@@ -62,7 +62,7 @@ namespace Bookchin.Library.App
             mainWindow.WaitForClose();
         }
 
-        private static void OpenLoginWindow(PhotinoWindow parent)
+        private static void OpenLoginWindow(PhotinoWindow mainWindow)
         {
             Console.WriteLine("Opening Login Window.");
 
@@ -70,7 +70,7 @@ namespace Bookchin.Library.App
 
             Action<PhotinoWindowOptions> windowConfiguration = options =>
             {
-                options.Parent = parent;
+                options.Parent = mainWindow;
 
                 options.WindowCreatedHandler += CreateAddInstanceEventHandler();
                 options.WindowCreatedHandler += CreateCheckWindowOverlapEventHander();
@@ -78,11 +78,11 @@ namespace Bookchin.Library.App
                 options.WindowClosingHandler += (object sender, EventArgs args) => {
                     if (_jwtBearer != null)
                     {
-                        parent.Load("wwwroot/index.html");
+                        mainWindow.Load("wwwroot/index.html");
                     }
                     else
                     {
-                        parent.Close();
+                        mainWindow.Close();
                     }
                 };
 
